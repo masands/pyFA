@@ -38,7 +38,7 @@ class TPLFile(OLGAFile):
         #time_series = [] # A temp. list to store the time series
         for i in range(len(self.input_file) - self.time_line - 1): # Loop from start of time series to EoF
             line = OLGAFile._get_line_at(self, self.time_line + i + 1)
-            self.time_series.append(line[0])
+            self.time_series.append(float(line[0]))
         
         # Get the total number of variables in file
         line = OLGAFile._get_line_at(self, self.catalog_line + 1)
@@ -61,7 +61,7 @@ class TPLFile(OLGAFile):
             olga_values = []
             for j in range(len(self.input_file) - self.time_line - 1):
                 line = OLGAFile._get_line_at(self, self.time_line + j + 1)
-                olga_values.append(line[idx])
+                olga_values.append(float(line[idx]))
             
             # Create and save variable data in new data instances
             oVar = TPLVariable(olga_var)
@@ -143,6 +143,11 @@ class TPLFile(OLGAFile):
         '''
         time_series, olga_values = self.get_values(olga_var, olga_var_name)
         
+        list_length = int(len(olga_values) - len(olga_values) * (x / 100))
+        olga_values_short = olga_values[list_length:]
+        olga_var_ave = sum(olga_values_short) / len(olga_values_short)
+               
+        return olga_var_ave
     
     def get_max(self, olga_var, olga_var_name, x = 5):
         '''
