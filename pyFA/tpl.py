@@ -134,9 +134,12 @@ class TPLFile(OLGAFile):
         
         Inputs:
             x(int): gets value average of last x% of points, default = 5%
+            olga_var(string): The required OLGA variable to get the data from
+            olga_var_name(string|None): The required OLGA object (position, branch etc.),\
+            to get the data at. Use None for Global variables. 
         
         Outputs:
-            float: average
+            olga_var_ave(float): Average value
         
         Example usage:
             olga_var_ave = <TPLFile_object>.get_ave('TM', 'SPOOL-INLET', 10)
@@ -151,8 +154,27 @@ class TPLFile(OLGAFile):
     
     def get_max(self, olga_var, olga_var_name, x = 5):
         '''
+        Gets the maximum value of the laast x% of points
+        
+        Inputs:
+            x(int): gets max of the last x% of points, default = 5%
+            olga_var(string): The required OLGA variable to get the data from
+            olga_var_name(string|None): The required OLGA object (position, branch etc.),\
+            to get the data at. Use None for Global variables. 
+        
+        Outputs:
+            max_time(float): Time at which the maximum value occurs
+            olga_var_max(float): Maximum value
         '''
-        pass
+        time_series, olga_values = self.get_values(olga_var, olga_var_name)
+        
+        list_length = int(len(olga_values) - len(olga_values) * (x / 100))
+        olga_values_short = olga_values[list_length:]
+        olga_var_max = max(olga_values_short)
+        idx = olga_values.index(olga_var_max)
+        max_time = time_series[idx]
+        
+        return max_time, olga_var_max
     
     def get_min(self, olga_var, olga_var_name, x = 5):
         '''
