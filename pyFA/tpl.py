@@ -178,5 +178,24 @@ class TPLFile(OLGAFile):
     
     def get_min(self, olga_var, olga_var_name, x = 5):
         '''
+        Gets the minimum value of the laast x% of points
+        
+        Inputs:
+            x(int): gets min of the last x% of points, default = 5%
+            olga_var(string): The required OLGA variable to get the data from
+            olga_var_name(string|None): The required OLGA object (position, branch etc.),\
+            to get the data at. Use None for Global variables. 
+        
+        Outputs:
+            min_time(float): Time at which the minimum value occurs
+            olga_var_min(float): Minimum value
         '''
-        pass
+        time_series, olga_values = self.get_values(olga_var, olga_var_name)
+        
+        list_length = int(len(olga_values) - len(olga_values) * (x / 100))
+        olga_values_short = olga_values[list_length:]
+        olga_var_min = min(olga_values_short)
+        idx = olga_values.index(olga_var_min)
+        min_time = time_series[idx]
+        
+        return min_time, olga_var_min
