@@ -4,7 +4,7 @@ from pyFA.OLGAvar import TPLVariable
 
 class TPLFile(OLGAFile):
     '''
-    A child class of the OLGAFile object. Handles an OLGA trend (.tpl) file
+    A child class of the OLGAFile object. Handles an OLGA trend (.tpl) files
     '''
     
     def __init__(self, file):
