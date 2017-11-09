@@ -93,7 +93,7 @@ class TPLFile(OLGAFile):
             temp_var_pipe = oVar._get_val('PIPE')
             temp_var_pipe_nr = oVar._get_val('NR')
             
-            if temp_var.find(olga_var) != -1 and \
+            if temp_var == olga_var and \
             temp_var_name.find(olga_var_name) != -1 and \
             temp_var_type.find(olga_var_type) != -1 and \
             temp_var_branch.find(olga_var_branch) != -1 and \
@@ -105,7 +105,7 @@ class TPLFile(OLGAFile):
         else:
             raise Exception('Specified variable not found in file!')
             
-    def get_names(self, olga_var):
+    def get_filter(self, olga_var):
         '''
         Used to get the names i.e. positions, branches etc. for a specified TPL variable
         
@@ -118,13 +118,20 @@ class TPLFile(OLGAFile):
         Example usage:
             var_names = <TPLFile_object>.get_names('TM')
         '''
-        var_names = []
-        if olga_var in self.var_dict:
-            for names in self.var_dict[olga_var]:
-                var_names.append(names)
-            return var_names
-        else:
-            raise Exception("Trend Variable: " + olga_var + " not found in file")
+        
+        for oVar in self.var_list:
+            temp_var = oVar._get_val('VARIABLE')
+            temp_var_name = oVar._get_val('NAME')
+            temp_var_type = oVar._get_val('TYPE')
+            temp_var_branch = oVar._get_val('BRANCH')
+            temp_var_pipe = oVar._get_val('PIPE')
+            temp_var_pipe_nr = oVar._get_val('NR')
+            
+            if temp_var == olga_var:
+                print('Variable: ' + temp_var + ', Name: ' + temp_var_name \
+                      + ', Variable Type: ' + temp_var_type + ', Branch: ' + \
+                      temp_var_branch + ', Pipe: ' + temp_var_pipe + ', NR: ' + \
+                      temp_var_pipe_nr)
     
     def get_ave(self, olga_var, olga_var_name, x = 5):
         '''
