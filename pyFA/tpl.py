@@ -20,7 +20,7 @@ class TPLFile(OLGAFile):
         '''
         file = file + ".tpl"
         OLGAFile.__init__(self, file) # Initialise the parent class
-        self.var_dict ={} # Holds OLGA variable objects
+        self.var_list = [] # Holds OLGA variable objects
         self.time_series = [] # Holds the time series
         self._parse_file()
 
@@ -47,43 +47,34 @@ class TPLFile(OLGAFile):
        # Save the variable data
         for i in range(total_olga_vars): # Loop through the variable list
             idx = i + 1
-            line = OLGAFile._get_line_at(self, self.catalog_line + i + 2)
-            olga_var = line[0]
-            olga_var_type = line[1]
+            var_line = OLGAFile._get_line_at(self, self.catalog_line + i + 2)
+            # Create a new TPL Variable
+            oVar = TPLVariable(var_line)
             
-            # Check for 'Global' variables without position, branch etc.
-            if olga_var_type.find('GLOBAL') == -1:
-                olga_var_name = line[2]
-            else:
-                olga_var_name = 'None'
-                        
             # Get variable data series
             olga_values = []
             for j in range(len(self.input_file) - self.time_line - 1):
                 line = OLGAFile._get_line_at(self, self.time_line + j + 1)
                 olga_values.append(float(line[idx]))
             
-            # Create and save variable data in new data instances
-            oVar = TPLVariable(olga_var)
-            oVar._set_type(olga_var_type)
-            oVar._set_name(olga_var_name)
+            # Save variable data
             oVar._set_val(olga_values[:])
 
-            #Save variable object in a dictionary
-            if olga_var not in self.var_dict:
-                self.var_dict[olga_var] = {}
-                self.var_dict[olga_var][olga_var_name] = oVar
-            else:
-                self.var_dict[olga_var][olga_var_name] = oVar
+            #Save variable object in a list
+            self.var_list.append(oVar)
      
-    def get_values(self, olga_var, olga_var_name):
+    def get_values(self, olga_var, olga_var_name = '', olga_var_type = '', olga_var_branch = '', olga_var_pipe = '', olga_var_pipe_nr = ''):
         '''
         A getter method to retrieve variable data
 
         Inputs:
             olga_var(string): The required OLGA variable to get the data from
-            olga_var_name(string|None): The required OLGA object (position, branch etc.),\
-            to get the data at. Use None for Global variables. 
+            olga_var_name(string|None): The name of the specified OLGA variable.
+            olga_var_type(string|None): The type of OLGA variable (section, position, branch etc.),\
+            to get the data at. Use None for Global variables.
+            olga_var_branch(string|None): The branch at which to get the data at.
+            olga_var_pipe(string|None): The pipe at which to get the data at.
+            olga_var_pipe_nr(string|None): The pipe section number at which to get the data at.
 
         Outputs:
             Time Series Data (list): Returns the time data for the OLGA variable
@@ -93,20 +84,27 @@ class TPLFile(OLGAFile):
             time_series, OLGA_data = <TPLFile_object>.get_values("TM", "SPOOL-INLET")
             
         '''
-        if olga_var_name == None:
-            olga_var_name = 'None'
-        else:
-            olga_var_name = "'" + olga_var_name + "'"
         
-        if olga_var in self.var_dict:
-            if olga_var_name in self.var_dict[olga_var]:
-                olga_values = self.var_dict[olga_var][olga_var_name]._get_val()
-                return self.time_series[:], olga_values
-            else:
-                raise Exception("Position: " + olga_var_name + " not found in file")
+        for oVar in self.var_list:
+            temp_var = oVar._get_val('VARIABLE')
+            temp_var_name = oVar._get_val('NAME')
+            temp_var_type = oVar._get_val('TYPE')
+            temp_var_branch = oVar._get_val('BRANCH')
+            temp_var_pipe = oVar._get_val('PIPE')
+            temp_var_pipe_nr = oVar._get_val('NR')
+            
+            if temp_var.find(olga_var) != -1 and \
+            temp_var_name.find(olga_var_name) != -1 and \
+            temp_var_type.find(olga_var_type) != -1 and \
+            temp_var_branch.find(olga_var_branch) != -1 and \
+            temp_var_pipe.find(olga_var_pipe) != -1 and \
+            temp_var_pipe_nr.find(olga_var_pipe_nr) != -1:
+                
+                return oVar._get_val('VALUES')[:]
+            
         else:
-            raise Exception("Trend Variable: " + olga_var + " not found in file")
-
+            raise Exception('Specified variable not found in file!')
+            
     def get_names(self, olga_var):
         '''
         Used to get the names i.e. positions, branches etc. for a specified TPL variable

@@ -31,47 +31,55 @@ class TPLVariable(OLGAVariable):
     Child class of the OLGAVariable object. Holds information for trend variables
     '''
     
-    def __init__(self, olga_var):
+    def __init__(self, var_line):
         '''
         Initialises the object
         
         Inputs:
-            olga_var(string): The OLGA variable i.e. PT, TM, QLST etc.
+            var_line (list): A list containing information on the OLGA variable.
         
         Outputs:
             none
         '''
-        
+        olga_var = var_line[0]
         OLGAVariable.__init__(self, olga_var) # Initialise the parent class
-        self.olga_var_type = '' # Type of variable i.e. Position or Branch
-        self.olga_var_name = ''# Name of the OLGA variable i.e. position or branch name
-        self.olga_values = [] # Holds the OLGA variable data
-    
-    def _set_type(self, olga_var_type):
+        
+        self.olga_var_data = {'VARIABLE': olga_var, 'NAME': '', 'TYPE': '', 'BRANCH': '', 'PIPE': '', 'NR': '', 'VALUES': []}
+               
+        self._parse_var(var_line)
+        
+    def _parse_var(self, var_line):
         '''
-        Sets type of OLGA variable i.e. Position or Branch
+        Parses an OLGA variable
         
         Inputs:
-            olga_var_type(string)
-        
+            var_line (list): A list containing information on the OLGA Variable
+            
         Outputs:
             none
         '''
         
-        self.olga_var_type = olga_var_type
-
-    def _set_name(self, olga_var_name):
-        '''
-        Sets the name of the OLGA variable i.e. the name of the position or branch
+        olga_var_type = var_line[1]
         
-        Inputs:
-            olga_var_name(string)
-        Outputs:
-            none
-        '''
-        
-        self.olga_var_name = olga_var_name
-
+        if olga_var_type.find('GLOBAL') != -1:
+            self.olga_var_data['TYPE'] = olga_var_type
+        elif (olga_var_type.find('SECTION') != -1 or olga_var_type.find('BOUNDARY') != -1):
+            branch_name = var_line[3]
+            pipe_name = var_line[5]
+            pipe_nr = var_line[7]
+            self.olga_var_data['TYPE'] = olga_var_type
+            self.olga_var_data['BRANCH'] = branch_name
+            self.olga_var_data['PIPE'] = pipe_name
+            self.olga_var_data['NR'] = pipe_nr
+        elif olga_var_type.find('BRANCH') != -1:
+            branch_name = var_line[2]
+            self.olga_var_data['TYPE'] = olga_var_type
+            self.olga_var_data['BRANCH'] = branch_name
+        else:
+            var_name = var_line[2]
+            self.olga_var_data['TYPE'] = olga_var_type
+            self.olga_var_data['NAME'] = var_name
+            
     def _set_val(self, olga_values):
         '''
         Stores the variable data in the self.OLGA_values list
@@ -82,31 +90,19 @@ class TPLVariable(OLGAVariable):
             none
         '''
         
-        self.olga_values = olga_values
-    
-    def _set_unit(self, olga_unit):
-        '''
-        '''
-        
-        pass
-    
-    def _set_desc(self, olga_desc):
-        '''
-        '''
-        
-        pass
-    
-    def _get_val(self):
+        self.olga_var_data['VALUES'] = olga_values
+       
+    def _get_val(self, parameter):
         '''
         Used to get OLGA variable data. Returns a copy of the self.OLGA_values list
         
         Inputs:
-            none
+            parameter(string) = VARIABLE|NAME|TYPE|BRANCH|PIPE|NR|VALUES
         Outputs:
             A copy of the self.OLGA_values list
         '''
         
-        return self.olga_values[:]
+        return self.olga_var_data[parameter]
     
     def __str__(self):
         '''
@@ -117,8 +113,8 @@ class TPLVariable(OLGAVariable):
         Outputs:
             string
         '''
-        
-        return 'Trend Variable: ' + self.olga_var +  ':' + self.olga_var_type + ':' + self.olga_var_name
+              
+        return self.olga_var_data['VARIABLE']
               
 class PPLVariable(OLGAVariable):
     '''
